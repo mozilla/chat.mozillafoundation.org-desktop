@@ -47,7 +47,7 @@ describe('electron-mattermost', function() {
 
   afterEach(function(done) {
     client.end().then(function() {
-      done();
+      setTimeout(done, 1000);
     });
   });
 
@@ -57,13 +57,14 @@ describe('electron-mattermost', function() {
 
   it('should show settings.html when there is no config file', function(done) {
     client
-      .init()
-      .getUrl().then(function(url) {
-        var p = path.parse(url);
-        p.base.should.equal('settings.html');
-      })
-      .end().then(function() {
-        done();
+      .init().then(function() {
+        client.getUrl().then(function(url) {
+            var p = path.parse(url);
+            p.base.should.equal('settings.html');
+          })
+          .end().then(function() {
+            done();
+          });
       });
   });
 
@@ -72,13 +73,15 @@ describe('electron-mattermost', function() {
       url: mattermost_url
     }));
     client
-      .init()
-      .getUrl().then(function(url) {
-        var p = path.parse(url);
-        p.base.should.equal('index.html');
-      })
-      .end().then(function() {
-        done();
+      .init().then(function() {
+        client
+          .getUrl().then(function(url) {
+            var p = path.parse(url);
+            p.base.should.equal('index.html');
+          })
+          .end().then(function() {
+            done();
+          });
       });
   });
 
@@ -88,16 +91,18 @@ describe('electron-mattermost', function() {
       url: mattermost_url
     }));
     client
-      .init()
-      .getUrl().then(function(url) {
-        var p = path.parse(url);
-        p.base.should.equal('index.html');
-      })
-      .end().then(function() {
-        var str = fs.readFileSync(config_file_path, 'utf8');
-        var config = JSON.parse(str);
-        config.version.should.equal(settings.version);
-        done();
+      .init().then(function() {
+        client
+          .getUrl().then(function(url) {
+            var p = path.parse(url);
+            p.base.should.equal('index.html');
+          })
+          .end().then(function() {
+            var str = fs.readFileSync(config_file_path, 'utf8');
+            var config = JSON.parse(str);
+            config.version.should.equal(settings.version);
+            done();
+          });
       });
   });
 
@@ -119,33 +124,41 @@ describe('electron-mattermost', function() {
 
     it('should set src of webview from config file', function(done) {
       client
-        .init()
-        .getAttribute('.mattermostView', 'src').then(function(attribute) {
-          attribute.forEach(function(attr, index) {
-            attr.should.equal(config.teams[index].url);
-          });
-        })
-        .end().then(function() {
-          done();
+        .init().then(function() {
+          client
+            .waitForExist('#mattermostView0')
+            .getAttribute('.mattermostView', 'src').then(function(attribute) {
+              attribute.forEach(function(attr, index) {
+                attr.should.equal(config.teams[index].url);
+              });
+            })
+            .end().then(function() {
+              done();
+            });
         });
     });
 
     it('should set name of tab from config file', function(done) {
       client
-        .init()
-        .getText('.teamTabItem').then(function(text) {
-          text.forEach(function(t, index) {
-            t.should.equal(config.teams[index].name);
-          });
-        })
-        .end().then(function() {
-          done();
+        .init().then(function() {
+          client
+            .waitForExist('#teamTabItem0')
+            .waitForExist('#teamTabItem1')
+            .getText('.teamTabItem').then(function(text) {
+              text.forEach(function(t, index) {
+                t.should.equal(config.teams[index].name);
+              });
+            })
+            .end().then(function() {
+              done();
+            });
         });
     });
 
     it('should show only the selected team', function(done) {
       var checkVisility = function(visibleIndex) {
         return function(isVisible) {
+          console.log(isVisible);
           isVisible.forEach(function(v, index) {
             if (index === visibleIndex) {
               v.should.equal(true);
@@ -157,14 +170,20 @@ describe('electron-mattermost', function() {
         };
       };
       client
-        .init()
-        .isVisible('.mattermostView').then(checkVisility(0))
-        .click('#teamTabItem1')
-        .isVisible('.mattermostView').then(checkVisility(1))
-        .click('#teamTabItem0')
-        .isVisible('.mattermostView').then(checkVisility(0))
-        .end().then(function() {
-          done();
+        .init().then(function() {
+          client
+            .timeoutsImplicitWait(5000)
+            .waitForVisible('#mattermostView0', 1000)
+            .isVisible('.mattermostView').then(checkVisility(0))
+            .click('#teamTabItem1')
+            .waitForVisible('#mattermostView1', 1000)
+            .isVisible('.mattermostView').then(checkVisility(1))
+            .click('#teamTabItem0')
+            .waitForVisible('#mattermostView0', 1000)
+            .isVisible('.mattermostView').then(checkVisility(0))
+            .end().then(function() {
+              done();
+            });
         });
     });
   });
@@ -187,33 +206,37 @@ describe('electron-mattermost', function() {
 
     it('should show index.thml when Cancel button is clicked', function(done) {
       client
-        .init()
-        .url('file://' + path.join(source_root_dir, 'src/browser/settings.html'))
-        .waitForExist('#btnCancel')
-        .click('#btnCancel')
-        .pause(1000)
-        .getUrl().then(function(url) {
-          var url_split = url.split('/');
-          url_split[url_split.length - 1].should.equal('index.html');
-        })
-        .end().then(function() {
-          done();
+        .init().then(function() {
+          client
+            .url('file://' + path.join(source_root_dir, 'src/browser/settings.html'))
+            .waitForExist('#btnCancel')
+            .click('#btnCancel')
+            .pause(1000)
+            .getUrl().then(function(url) {
+              var url_split = url.split('/');
+              url_split[url_split.length - 1].should.equal('index.html');
+            })
+            .end().then(function() {
+              done();
+            });
         });
     });
 
     it('should show index.thml when Save button is clicked', function(done) {
       client
-        .init()
-        .url('file://' + path.join(source_root_dir, 'src/browser/settings.html'))
-        .waitForExist('#btnSave')
-        .click('#btnSave')
-        .pause(1000)
-        .getUrl().then(function(url) {
-          var url_split = url.split('/');
-          url_split[url_split.length - 1].should.equal('index.html');
-        })
-        .end().then(function() {
-          done();
+        .init().then(function() {
+          client
+            .url('file://' + path.join(source_root_dir, 'src/browser/settings.html'))
+            .waitForExist('#btnSave')
+            .click('#btnSave')
+            .pause(1000)
+            .getUrl().then(function(url) {
+              var url_split = url.split('/');
+              url_split[url_split.length - 1].should.equal('index.html');
+            })
+            .end().then(function() {
+              done();
+            });
         });
     });
 
