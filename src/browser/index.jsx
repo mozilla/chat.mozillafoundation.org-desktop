@@ -271,6 +271,19 @@ var MattermostView = React.createClass({
       }
     });
 
+    var addEventObserver = (event_name) => {
+      webview.addEventListener(event_name, (e) => {
+        console.log(`webview [${thisObj.props.name}]`, event_name, e);
+      });
+    };
+    var load_events = [
+      'load-commit', 'did-finish-load', 'did-fail-load', 'did-frame-finish-load',
+      'did-start-loading', 'did-stop-loading',
+      'did-get-response-details', 'did-get-redirect-request',
+      'will-navigate', 'did-navigate', 'did-navigate-in-page'
+    ];
+    load_events.forEach(addEventObserver);
+
     webview.addEventListener('console-message', (e) => {
       const message = `[${this.props.name}] ${e.message}`;
       switch (e.level) {
