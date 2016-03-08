@@ -113,6 +113,12 @@ app.on('certificate-error', function(event, webContents, url, error, certificate
   }
 });
 
+app.on('login', function(event, webContents, request, authInfo, callback) {
+  console.log('app.on(login)');
+  console.log(request);
+  console.log(authInfo);
+});
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', function() {
