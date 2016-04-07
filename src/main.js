@@ -31,8 +31,8 @@ else {
 }
 
 var config = {};
+var configFile = global['config-file'];
 try {
-  var configFile = global['config-file'];
   config = settings.readFileSync(configFile);
   if (config.version != settings.version) {
     config = settings.upgrade(config);
@@ -41,6 +41,7 @@ try {
 }
 catch (e) {
   config = settings.loadDefault();
+  settings.writeFileSync(configFile, config);
   console.log('Failed to read or upgrade config.json');
 }
 

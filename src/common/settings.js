@@ -21,7 +21,9 @@ var loadDefault = function(version) {
   switch (version) {
     case 1:
       return {
-        teams: [],
+        teams: [
+          {name: 'Mozilla Foundation', url: 'https://chat.mozillafoundation.org'}
+        ],
         hideMenuBar: false,
         version: 1
       };
